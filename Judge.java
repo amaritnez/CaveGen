@@ -697,7 +697,8 @@ pod breadbugs/high treasures
                 + geyserBreak;
         }
 
-        else if (CaveGen.judgeType.equals("colossal")) { // this could definetly be improved someday.
+        // COLOSSAL CAVERN JUDGE: LOOKY HERE
+        else if (CaveGen.judgeType.equals("colossal")) { // this could definetly be improved someday. (like today :) )
             // travel time to globe (including gates)
             // + time for globe to return to ship fastest carry
             float tripKeyGates = 0;
@@ -731,12 +732,27 @@ pod breadbugs/high treasures
             int treasureCount = g.placedItems.size() + placedTekisWithItemsInside.size();
 
             // compute pikmin*seconds required to collect all treasures
+            // one of the values used for the final score
             float pikminSeconds = 0;
+            //
             float activePikmin = 0;
 
+            // Add weight to the onion distances
             for (Onion o: g.placedOnions) {
+              // Place more weight on blue onion, since it's the most important in CC
+              if(o.type == 0)
+              {
                 pikminSeconds += 
-                        10 * pikiCount * g.spawnPointDistToStart(o.spawnPoint) / 170.0f;
+                    // the extra 1.25 multiplier puts weight on this value in the calculation,
+                    // meaning the larger the distance, the more of an effect it'll have on the final score
+                    10 * pikiCount * g.spawnPointDistToStart(o.spawnPoint) * 1.25 / 170.0f;                 
+              }
+              else
+              {
+                pikminSeconds += 
+                        10 * pikiCount * g.spawnPointDistToStart(o.spawnPoint) / 170.0f;                
+              }
+                
             }
 
             for (Item t: g.placedItems) {
@@ -771,17 +787,30 @@ pod breadbugs/high treasures
                            * carryMultiplier / (220.0f + 180.0f * (pikiCarryValue * carry - minCarry + 1) / maxCarry) / 1.3f;
             }
 
+            //One of the values used in calculating score for CC
             float carrySeconds = pikminSeconds == 0 ? 0 : pikminSeconds / Math.min(pikiCount, activePikmin);
             
             // Teki/Hazards that are in the way of treasures
             float hazardSeconds = 0;
-            computeWaypointCarryableGraph(g, "t"); // treasures
+            // Score for determining close violet candypop buds
+            float  purpleFlowerScore = 0;
+            // Computes the waypoints of all treasures, seeing if/how they can be returned
+            computeWaypointCarryableGraph(g, "t");
+            // Iterate through every teki in the cave
             for (Teki t: g.placedTekis) {
+                // Parse the name so we don't have to worry about capitilazation differences
                 String name = t.tekiName.toLowerCase();
+                // If the teki is in the way of something, increase the hazardSeconds times, thus inflating the score
                 if (isInTheWay(g, t)) {
                     hazardSeconds += Parser.tekiDifficultyJudgeSec.get(name) / 2.0f;
                 }
+                if (name.equals("blackpom"))
+                {
+                  purpleFlowerScore += g.spawnPointDistToStart(t.spawnPoint) * 2;                  
+                }
             }
+            // Average out purpleFlowerScore for 3 candypop buds
+            purpleFlowerScore /= 30;
 
             // gates that are in the way of holes/treasures
             float gateSeconds = 0;
@@ -794,15 +823,20 @@ pod breadbugs/high treasures
                 }
             }
 
+            // If not all treasures are present, add a penalty to the final score (prevent glitched seeds from not being
+            // at the bottom of the judge)
             float treasurePenalty = treasureCount < expectedNumTreasures ? 10000 * (expectedNumTreasures - treasureCount): 0;
 
             //System.out.println("carry" + carrySeconds + " walk" + walkingSeconds + " haz" + hazardSeconds + " gate" + gateSeconds);
             //System.out.println("tpen" + treasurePenalty + " ppen" + purpPenalty);
             //System.out.println("kWalk" + keyWalk + " kCarry" + keyCarry);
             //stats.println("kWalk" + keyWalk + " kCarry" + keyCarry);
+            
+            // FINAL SCORE; adds all the stuff in the above calculations to give the seed
+            // it's final score for colossal judge
             score = tripKeyGates + keyWalk + keyCarry
                         + carrySeconds + hazardSeconds + gateSeconds
-                        + treasurePenalty;
+                        + treasurePenalty + purpleFlowerScore;
             
         } 
 
@@ -1278,7 +1312,7 @@ pod breadbugs/high treasures
                     if (t.itemInside.equalsIgnoreCase("key"))
                         g.closestWayPoint(t.spawnPoint).hasCarryableBehind = true;
         }
-        if (config.contains("m")) { // map01
+        if (config.contains("m")) { // map01 aka Globe used by crawbster in CC
             for (Item t: g.placedItems)
                 if (t.itemName.equalsIgnoreCase("map01"))
                     g.closestWayPoint(t.spawnPoint).hasCarryableBehind = true;

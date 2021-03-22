@@ -2450,6 +2450,7 @@ public class CaveGen {
         return a.closestWayPoint;
     }
 
+    // Returns a value representing the distance of an item from the spawnpoint in a floor
     float spawnPointDistToStart(SpawnPoint a) {
         if (a.distToStart != -1) return a.distToStart;
         WayPoint minWp = closestWayPoint(a);
