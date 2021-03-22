@@ -804,8 +804,10 @@ pod breadbugs/high treasures
                 if (isInTheWay(g, t)) {
                     hazardSeconds += Parser.tekiDifficultyJudgeSec.get(name) / 2.0f;
                 }
+                // While we're iterating through tekis, look for purple candypop buds
                 if (name.equals("blackpom"))
                 {
+                  // increase the score based on their distance and using a weight multiplier
                   purpleFlowerScore += g.spawnPointDistToStart(t.spawnPoint) * 2;                  
                 }
             }
@@ -832,11 +834,38 @@ pod breadbugs/high treasures
             //System.out.println("kWalk" + keyWalk + " kCarry" + keyCarry);
             //stats.println("kWalk" + keyWalk + " kCarry" + keyCarry);
             
+            // Penalty used whenever a seed has a "cringe" unit, if this is 0 the seed has no cringe units
+            float cringeScore = 0;
+            for (MapUnit m: g.placedMapUnits)
+            {
+              String unitName = m.name.toLowerCase();
+              // Cringe swamp room
+              if(unitName.equals("room_ike4_5_tsuchi")) {
+                cringeScore += 150;
+              }
+              // Crine metal unit, omega cringe
+              else if(unitName.equals("room_nobo1_4_metal")) {
+                cringeScore += 200;
+              }
+              // Big tile room
+              else if(unitName.equals("room_bunki7x7_8_tile")) {
+                cringeScore += 75;
+              }
+              // Rare emperor bulbax/Hoh BLL room, kinda cringe
+              else if(unitName.equals("room_nobo1_4_metal")) {
+                cringeScore += 50;
+              }
+              else {
+                // do nothing, but good programming practices compel me to write this else statement
+              }
+              
+            }
+            
             // FINAL SCORE; adds all the stuff in the above calculations to give the seed
             // it's final score for colossal judge
             score = tripKeyGates + keyWalk + keyCarry
                         + carrySeconds + hazardSeconds + gateSeconds
-                        + treasurePenalty + purpleFlowerScore;
+                        + treasurePenalty + purpleFlowerScore + cringeScore;
             
         } 
 
